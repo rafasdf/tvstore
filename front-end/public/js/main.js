@@ -157,8 +157,6 @@ function handleFilters() {
     let list_type = document.getElementById("items_list");
     list_type.innerHTML = "";
 
-    console.log("change");
-
     getItemsConditions();
 
 }
@@ -169,7 +167,7 @@ function getItemsConditions() {
     let conditions = {brand:[],type:[],size:[],resolution:[],voltage:[]};
 
     let search = document.getElementById('search').value;
-    if(search !== "") console.log(search); conditions.search = search;
+    if(search !== "") conditions.search = search;
 
     document.getElementById('search').disabled = false;
     document.getElementById("no_itens").setAttribute("style","display:none");
@@ -206,6 +204,9 @@ function enabledFilters() {
     document.getElementById('search').disabled = false;
     document.getElementById("loader").setAttribute("style","display:none");
     document.getElementById("loader").classList.remove("hide");
+    let loadmore = document.getElementById("loadmore");
+    loadmore.classList.remove("disabled");
+    loadmore.firstChild.data = "Carregar mais";
 
     if(itemsShowing === 0) {
         document.getElementById("no_itens").removeAttribute("style");
@@ -234,10 +235,8 @@ $(document).ready(function(){
     getItems();
     $("#loadmore").on("click", function(e){
       e.preventDefault();
-      console.log("showing "+itemsShowing);
-      console.log("quantity "+itemsQuantity);
       if (itemsShowing === itemsQuantity){
-        $("#loadmore").text("Sem items").addClass("disabled");
+        $("#loadmore").text("Sem itens").addClass("disabled");
       } else { 
         getItemsConditions();
       }
