@@ -24,21 +24,7 @@ routes.get('/items', function(req, res) {
     })
 });
 
-routes.get('/pageItems/:limit/:page', function(req, res) {
-    let limit = parseInt(req.params.limit);
-    let ini = (req.params.page-1)*limit;
-
-    getPageItems(ini,limit).then((items) =>  {
-        console.log(items);
-        res.status(200).json(items)
-    }).catch((err) => {
-        console.log('Error getting items: ', err);
-        res.status(500).json({ error: 'Internal server error' });
-    });
-    
-});
-
-routes.post('/pageItems2', function(req, res) {
+routes.post('/pageItems', function(req, res) {
 
 
     if(req.body.limit === undefined || req.body.ini === undefined)
@@ -49,7 +35,7 @@ routes.post('/pageItems2', function(req, res) {
     let where = {};
 
     if(req.body.search !== undefined) 
-        where.search = "%"+req.body.search+"%";
+        where.search = "%"+req.body.search.toLowerCase()+"%";
     if(req.body.brand !== undefined && req.body.brand.length > 0) 
         where.brand = req.body.brand;
     if(req.body.type !== undefined && req.body.type.length > 0) 
@@ -61,7 +47,7 @@ routes.post('/pageItems2', function(req, res) {
     if(req.body.voltage !== undefined && req.body.voltage.length > 0) 
         where.voltage = req.body.voltage;
 
-    getPageItems2(ini,limit,where).then((items) =>  {
+    getPageItems(ini,limit,where).then((items) =>  {
         res.status(200).json(items)
     }).catch((err) => {
         console.log('Error getting items: ', err);
@@ -69,56 +55,6 @@ routes.post('/pageItems2', function(req, res) {
     });
     
 });
-
-async function getPageItems(ini,limit) {
-    let myPromise = new Promise(function(myResolve, myReject) {
-        DB.countItems().then((quant) =>  {
-            myResolve(JSON.parse(JSON.stringify(quant)))
-        }).catch((err) => {
-            console.log('Error getting items: ', err);
-            myReject({ error: 'Internal server error' });
-        })
-    });
-    let quant = await myPromise;
-
-    let myPromise2 = new Promise(function(myResolve, myReject) {
-        DB.getPageItems(ini,limit).then((items) => {
-            myResolve(JSON.parse(JSON.stringify((items.map(addImage)))));
-        }).catch((err) => {
-            console.log('Error getting items: ', err);
-            myReject({ error: 'Internal server error' });
-        })
-    });
-    let json_result = await myPromise2;
-
-    return JSON.parse(JSON.stringify({items:json_result,size:quant[0].quant}));
-
-}
-
-async function getPageItems2(ini,limit,where) {
-    let myPromise = new Promise(function(myResolve, myReject) {
-        DB.countItems().then((quant) =>  {
-            myResolve(JSON.parse(JSON.stringify(quant)))
-        }).catch((err) => {
-            console.log('Error getting items: ', err);
-            myReject({ error: 'Internal server error' });
-        })
-    });
-    let quant = await myPromise;
-
-    let myPromise2 = new Promise(function(myResolve, myReject) {
-        DB.getPageItems2(ini,limit,where).then((items) => {
-            myResolve(JSON.parse(JSON.stringify((items.map(addImage)))));
-        }).catch((err) => {
-            console.log('Error getting items: ', err);
-            myReject({ error: 'Internal server error' });
-        })
-    });
-    let json_result = await myPromise2;
-
-    return JSON.parse(JSON.stringify({items:json_result,size:quant[0].quant}));
-
-}
 
 routes.get('/itemsMeta/:id', function(req, res) {
     DB.getItemsMeta(req.params.id).then((items) =>  {
@@ -158,6 +94,31 @@ function addImage(item) {
         item.image_path = path;
     }
     return item;
+
+}
+
+async function getPageItems(ini,limit,where) {
+    let myPromise = new Promise(function(myResolve, myReject) {
+        DB.countItems(where).then((quant) =>  {
+            myResolve(JSON.parse(JSON.stringify(quant)))
+        }).catch((err) => {
+            console.log('Error getting items: ', err);
+            myReject({ error: 'Internal server error' });
+        })
+    });
+    let quant = await myPromise;
+
+    let myPromise2 = new Promise(function(myResolve, myReject) {
+        DB.getPageItems(ini,limit,where).then((items) => {
+            myResolve(JSON.parse(JSON.stringify((items.map(addImage)))));
+        }).catch((err) => {
+            console.log('Error getting items: ', err);
+            myReject({ error: 'Internal server error' });
+        })
+    });
+    let json_result = await myPromise2;
+
+    return JSON.parse(JSON.stringify({items:json_result,size:quant[0].quant}));
 
 }
 

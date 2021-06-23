@@ -19,13 +19,20 @@ function createFilterListElements(filterElements,type) {
 
 async function getFilters() {
 
+    let divLoad = document.getElementById("div_load");
+    divLoad.setAttribute("class", "load__div");
+
     let myPromise = new Promise(function(myResolve, myReject) {
         let req = new XMLHttpRequest();
         req.open('GET', "http://localhost:3000/filters");
         req.onload = function() {
-            if (req.status == 200) {myResolve(JSON.parse(req.response));}
+            divLoad.setAttribute("class", "hidden");
+            if (req.status == 200) {
+                myResolve(JSON.parse(req.response));
+            }
             else {myReject("Error");}
         };
+        req.addEventListener("error", transferFailed, false);
         req.send();
     });
     filters = await myPromise;
@@ -38,84 +45,9 @@ async function getFilters() {
 
 }
 
-async function getItems() {
+async function getItems(conditions) {
 
     itemsPage++;
-
-    console.log("getItems("+itemsPage+")");
-
-    let myPromise = new Promise(function(myResolve, myReject) {
-        let req = new XMLHttpRequest();
-        req.open('GET', "http://localhost:3000/pageItems/6/"+(itemsPage));
-        req.onload = function() {
-            if (req.status == 200) {
-                console.log(JSON.parse(req.response));
-                myResolve(JSON.parse(req.response));
-            } else {myReject("Error");}
-        };
-        req.send();
-    });
-    let itemsAndSize = await myPromise;
-
-    items = items.concat(itemsAndSize.items);
-    itemsQuantity = itemsAndSize.size;
-    itemsShowing = itemsShowing + items.length;
-    
-    let items_for = itemsAndSize.items;
-    for (let i = 0; i < items_for.length; i++) { 
-
-        let myPromiseMeta = new Promise(function(myResolve, myReject) {
-            let req = new XMLHttpRequest();
-            req.open('GET', "http://localhost:3000/itemsMeta/"+items[i].id);
-            req.onload = function() {
-                if (req.status == 200) {myResolve(JSON.parse(req.response));}
-                else {myReject("Error");}
-            };
-            req.send();
-        });
-
-        let itemsMeta = await myPromiseMeta;
-
-        console.log(itemsMeta);
-
-        let list_type = document.getElementById("items_list");
-        let div = document.createElement("div");
-        div.setAttribute("class", "col-4 mb-3");
-        let image_path = "/assets/images/default-tv.png";
-        let html = '<div class="cz-product-item" id="item_'+items[i].id+'">'+
-            '  <img class="cz-product-item__img mb-4" src="'+'http://localhost:3000/'+items[i].image_path+'" alt=""/>'+
-            '  <h2>'+items[i].title+'</h2>'+
-            '  <div class="cz-product-item__row"><span>Marca:</span><span>'+items[i].brand+'</span></div>'+
-            '  <div class="cz-product-item__row"><span>Tipo:</span><span>'+items[i].screen_type+'</span></div>'+
-            '  <div class="cz-product-item__row"><span>Tamanha:</span><span>'+items[i].screen_size+'</span></div>'+
-            '  <div class="cz-product-item__row"><span>Resolução:</span><span>'+items[i].resolution+'</span></div>'+
-            '  <div class="cz-product-item__row"><span>Voltagem:</span><span>'+items[i].voltage+'</span></div>'+
-            '  <h2 class="mt-3">Informações adicionais</h2>';
-            
-        if(itemsMeta.model !== undefined) {
-            html = html + '<div class="cz-product-item__row"><span>Modelo:</span><span>'+itemsMeta.model+'</span></div>';
-        }
-        if (itemsMeta.output !== undefined) {
-            html = html + '<div class="cz-product-item__row"><span>Saídas:</span><span>'+itemsMeta.output+'</span></div>';
-        }
-        if (itemsMeta.hdtv !== undefined) {
-            html = html + '<div class="cz-product-item__row mb-4"><span>HDTV:</span><span>'+itemsMeta.hdtv+'</span></div>';
-        }
-          
-        html = html + '<button class="btn btn-primary" type="button">Comprar</button></div>';
-        
-
-        div.innerHTML = html;
-        list_type.appendChild(div);
-    }
-
-}
-
-async function getItemsPost(conditions) {
-
-    itemsPage++;
-
-    console.log("getItemsPost("+JSON.stringify(conditions));
 
     let parameters = {};
     if(conditions !== undefined)
@@ -123,78 +55,105 @@ async function getItemsPost(conditions) {
     parameters.ini = itemsPage;
     parameters.limit = 6;
 
-    console.log("parameters: "+JSON.stringify(parameters));
-
     let myPromise = new Promise(function(myResolve, myReject) {
         let req = new XMLHttpRequest();
-        req.open('POST', "http://localhost:3000/pageItems2");
+        req.open('POST', "http://localhost:3000/pageItems");
         req.setRequestHeader('Content-type', 'application/json');
         req.onload = function() {
             if (req.status == 200) {
-                console.log(JSON.parse(req.response));
                 myResolve(JSON.parse(req.response));
             } else {myReject("Error");}
         };
+        req.addEventListener("error", transferFailed, false);
         req.send(JSON.stringify(parameters));
     });
-    let itemsAndSize = await myPromise;
 
-    items = itemsAndSize.items;
-    itemsQuantity = itemsAndSize.size;
-    itemsShowing = itemsShowing + items.length;
-    
-    for (let i = 0; i < items.length; i++) { 
-
-        let myPromiseMeta = new Promise(function(myResolve, myReject) {
-            let req = new XMLHttpRequest();
-            req.open('GET', "http://localhost:3000/itemsMeta/"+items[i].id);
-            req.onload = function() {
-                if (req.status == 200) {myResolve(JSON.parse(req.response));}
-                else {myReject("Error");}
-            };
-            req.send();
-        });
-
-        let itemsMeta = await myPromiseMeta;
-
-        console.log(itemsMeta);
-
-        let list_type = document.getElementById("items_list");
-        let div = document.createElement("div");
-        div.setAttribute("class", "col-4 mb-3");
-        let image_path = "/assets/images/default-tv.png";
-        let html = '<div class="cz-product-item" id="item_'+items[i].id+'">'+
-            '  <img class="cz-product-item__img mb-4" src="'+'http://localhost:3000/'+items[i].image_path+'" alt=""/>'+
-            '  <h2>'+items[i].title+'</h2>'+
-            '  <div class="cz-product-item__row"><span>Marca:</span><span>'+items[i].brand+'</span></div>'+
-            '  <div class="cz-product-item__row"><span>Tipo:</span><span>'+items[i].screen_type+'</span></div>'+
-            '  <div class="cz-product-item__row"><span>Tamanha:</span><span>'+items[i].screen_size+'</span></div>'+
-            '  <div class="cz-product-item__row"><span>Resolução:</span><span>'+items[i].resolution+'</span></div>'+
-            '  <div class="cz-product-item__row"><span>Voltagem:</span><span>'+items[i].voltage+'</span></div>'+
-            '  <h2 class="mt-3">Informações adicionais</h2>';
-            
-        if(itemsMeta.model !== undefined) {
-            html = html + '<div class="cz-product-item__row"><span>Modelo:</span><span>'+itemsMeta.model+'</span></div>';
-        }
-        if (itemsMeta.output !== undefined) {
-            html = html + '<div class="cz-product-item__row"><span>Saídas:</span><span>'+itemsMeta.output+'</span></div>';
-        }
-        if (itemsMeta.hdtv !== undefined) {
-            html = html + '<div class="cz-product-item__row mb-4"><span>HDTV:</span><span>'+itemsMeta.hdtv+'</span></div>';
-        }
-          
-        html = html + '<button class="btn btn-primary" type="button">Comprar</button></div>';
+    try {
+        let itemsAndSize = await myPromise;
         
+        items = itemsAndSize.items;
+        itemsQuantity = itemsAndSize.size;
+        itemsShowing = itemsShowing + items.length;
 
-        div.innerHTML = html;
-        list_type.appendChild(div);
+        if (items.length === 0) {
+            enabledFilters();
+        }
+        
+        for (let i = 0; i < items.length; i++) { 
+
+            let myPromiseMeta = new Promise(function(myResolve, myReject) {
+                let req = new XMLHttpRequest();
+                req.open('GET', "http://localhost:3000/itemsMeta/"+items[i].id);
+                req.onload = function() {
+                    if (req.status == 200) {myResolve(JSON.parse(req.response));}
+                    else {myReject("Error");}
+                };
+                req.addEventListener("error", transferFailed, false);
+                req.send();
+            });
+
+            try {
+
+                let itemsMeta = await myPromiseMeta;
+
+                let list_type = document.getElementById("items_list");
+                let div = document.createElement("div");
+                div.setAttribute("class", "col-4 mb-3");
+                let image_path = "/assets/images/default-tv.png";
+                let html = '<div class="cz-product-item" id="item_'+items[i].id+'">'+
+                    '  <img class="cz-product-item__img mb-4" src="'+'http://localhost:3000/'+items[i].image_path+'" alt=""/>'+
+                    '  <h2>'+items[i].title+'</h2>'+
+                    '  <div class="cz-product-item__row"><span>Marca:</span><span>'+items[i].brand+'</span></div>'+
+                    '  <div class="cz-product-item__row"><span>Tipo:</span><span>'+items[i].screen_type+'</span></div>'+
+                    '  <div class="cz-product-item__row"><span>Tamanha:</span><span>'+items[i].screen_size+'</span></div>'+
+                    '  <div class="cz-product-item__row"><span>Resolução:</span><span>'+items[i].resolution+'</span></div>'+
+                    '  <div class="cz-product-item__row"><span>Voltagem:</span><span>'+items[i].voltage+'</span></div>'+
+                    '  <h2 class="mt-3">Informações adicionais</h2>';
+                    
+                if(itemsMeta.model !== undefined) {
+                    html = html + '<div class="cz-product-item__row"><span>Modelo:</span><span>'+itemsMeta.model+'</span></div>';
+                }
+                if (itemsMeta.output !== undefined) {
+                    html = html + '<div class="cz-product-item__row"><span>Saídas:</span><span>'+itemsMeta.output+'</span></div>';
+                }
+                if (itemsMeta.hdtv !== undefined) {
+                    html = html + '<div class="cz-product-item__row mb-4"><span>HDTV:</span><span>'+itemsMeta.hdtv+'</span></div>';
+                }
+                
+                html = html + '<button class="btn btn-primary" type="button">Comprar</button></div>';
+                
+                div.innerHTML = html;
+                list_type.appendChild(div);
+
+                if((i+1) === items.length)
+                    enabledFilters();
+            
+            } catch(e) {
+                console.log(e);
+                document.getElementById("erro").classList.remove("hide");
+            }
+
+        }
+
+    } catch(e) {
+        console.log(e);
+        document.getElementById("erro").classList.remove("hide");
     }
 
+}
+
+function transferFailed(e) {
+    console.log(e);
+    document.getElementById("erro").classList.remove("hide");
+    document.getElementById("loader").setAttribute("style","display:none");
 }
 
 function handleFilters() {
 
     itemsPage = 0;
+    itemsShowing = 0;
+    itemsQuantity = 0;
+
     let list_type = document.getElementById("items_list");
     list_type.innerHTML = "";
 
@@ -212,6 +171,12 @@ function getItemsConditions() {
     let search = document.getElementById('search').value;
     if(search !== "") console.log(search); conditions.search = search;
 
+    document.getElementById('search').disabled = false;
+    document.getElementById("no_itens").setAttribute("style","display:none");
+    document.getElementById("loadmore").setAttribute("style","display:none");
+    document.getElementById("loader").removeAttribute("style");
+
+
     for (let i = 0; i < list_filters.length; i++) {
         const checkbox = list_filters[i];
         if(checkbox.checked === true) {
@@ -228,8 +193,30 @@ function getItemsConditions() {
             if(checkbox.classList.contains('voltage')) 
                 conditions.voltage.push(label.textContent);
         }
+        checkbox.disabled = true;
         if((i+1) === list_filters.length)
-            getItemsPost(conditions);     
+            getItems(conditions);     
+    } 
+}
+
+function enabledFilters() {
+
+    let list_filters = document.getElementsByClassName("custom-control-input");
+
+    document.getElementById('search').disabled = false;
+    document.getElementById("loader").setAttribute("style","display:none");
+    document.getElementById("loader").classList.remove("hide");
+
+    if(itemsShowing === 0) {
+        document.getElementById("no_itens").removeAttribute("style");
+        document.getElementById("no_itens").classList.remove("hide");
+    } else {
+        document.getElementById("loadmore").removeAttribute("style");
+    }
+
+    for (let i = 0; i < list_filters.length; i++) {
+        const checkbox = list_filters[i];
+        checkbox.disabled = false; 
     } 
 }
 
@@ -244,12 +231,13 @@ document.getElementById('search')
 
 $(document).ready(function(){
     getFilters();
-    getItemsPost();
+    getItems();
     $("#loadmore").on("click", function(e){
       e.preventDefault();
-      console.log('click load more');
-      if (itemsShowing == itemsQuantity){
-        $("#loadmore").text("No Content").addClass("disabled");
+      console.log("showing "+itemsShowing);
+      console.log("quantity "+itemsQuantity);
+      if (itemsShowing === itemsQuantity){
+        $("#loadmore").text("Sem items").addClass("disabled");
       } else { 
         getItemsConditions();
       }

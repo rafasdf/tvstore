@@ -25,12 +25,11 @@
       </div>
     </header>
     <main class="cz-main">
-      <!--div class="load__div">
-        <div class="spinner-border" role="status">
-          <span class="sr-only">Loading...</span>
-        </div>
-      </div-->
+      <div class="hidden" id="div_load"></div>
       <section class="container">
+        <div class="alert alert-danger hide" id="erro">
+          <strong>Oops!</strong> Algo deu errado. Por favor, tente mais tarde.
+        </div>
         <div class="row py-5">
           <div class="col-2">
             <div class="row">
@@ -66,6 +65,18 @@
                   <input class="form-control" type="text" id="search" placeholder="Buscar" aria-label="Search"/>
                 </div>
               </div>
+            </div>
+            <div class="row hide" id="loader">
+              <div class="col-4 mb-3"></div>
+              <div class="col-4 mb-3 d-flex justify-content-center">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="sr-only">Loading...</span>
+                </div>
+              </div>
+              <div class="col-4 mb-3"></div>
+            </div>
+            <div class="row hide" id='no_itens'>
+                <span>Nenhum registro encontrado.</span>
             </div>
             <div class="row items_list" id='items_list'>
             </div>
